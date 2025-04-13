@@ -1,10 +1,9 @@
 # 🏠 Airbnb Search Assistant
 
-A Streamlit-based chatbot application that helps users find their perfect accommodation using AI-powered search capabilities. The assistant can search for properties worldwide, filter by amenities, and provide personalized recommendations.
+A Gradio-based chatbot application that helps users find their perfect accommodation using AI-powered search capabilities. The assistant can search for properties worldwide, filter by amenities, and provide personalized recommendations.
 
 ![Airbnb Search Assistant](https://img.shields.io/badge/Status-Active-success)
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
-![Streamlit](https://img.shields.io/badge/Streamlit-1.32.0%2B-orange)
 
 ## ✨ Features
 
@@ -50,12 +49,12 @@ OPENAI_API_KEY=your_openai_api_key
 
 1. Start the Streamlit app:
 ```bash
-streamlit run chatbot.py
+python chatbot.py
 ```
 
 2. Open your browser and navigate to:
 ```
-http://localhost:8501
+http://localhost:XXXX
 ```
 
 ## 💡 Usage
@@ -101,7 +100,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Special thanks to [openbnb-org/mcp-server-airbnb](https://github.com/openbnb-org/mcp-server-airbnb) for the MCP server
 - OpenAI for the GPT models
-- Streamlit for the web framework
+- Gradio for the web framework
 
 ## 📞 Support
 
