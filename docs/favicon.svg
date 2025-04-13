@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <style>
+    .logo-text {
+      font-family: 'Nunito', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      fill: #ffffff;
+      text-anchor: middle;
+    }
+  </style>
+  <rect width="64" height="64" fill="#121212" />
+  <text x="32" y="28" class="logo-text">mcp</text>
+  <text x="32" y="48" class="logo-text">use</text>
+</svg>

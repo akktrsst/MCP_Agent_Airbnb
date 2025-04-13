@@ -1,0 +1,234 @@
+---
+title: Quickstart
+description: "Get started with mcp_use in minutes"
+---
+
+# Quickstart Guide
+
+This guide will help you get started with mcp_use quickly. We'll cover installation, basic configuration, and running your first agent.
+
+## Installation
+
+You can install mcp_use using pip:
+
+```bash
+pip install mcp-use
+```
+
+Or install from source:
+
+```bash
+git clone https://github.com/pietrozullo/mcp-use.git
+cd mcp-use
+pip install -e .
+```
+
+## Installing LangChain Providers
+
+mcp_use works with various LLM providers through LangChain. You'll need to install the appropriate LangChain provider package for your chosen LLM. For example:
+
+```bash
+# For OpenAI
+pip install langchain-openai
+
+# For Anthropic
+pip install langchain-anthropic
+
+# For other providers, check the [LangChain chat models documentation](https://python.langchain.com/docs/integrations/chat/)
+```
+
+> **Important**: Only models with tool calling capabilities can be used with mcp_use. Make sure your chosen model supports function calling or tool use.
+
+## Environment Setup
+
+Set up your environment variables in a `.env` file:
+
+```bash
+OPENAI_API_KEY=your_api_key_here
+ANTHROPIC_API_KEY=your_api_key_here
+```
+
+## Your First Agent
+
+Here's a simple example to get you started:
+
+```python
+import asyncio
+import os
+from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
+from mcp_use import MCPAgent, MCPClient
+
+async def main():
+    # Load environment variables
+    load_dotenv()
+
+    # Create configuration dictionary
+    config = {
+      "mcpServers": {
+        "playwright": {
+          "command": "npx",
+          "args": ["@playwright/mcp@latest"],
+          "env": {
+            "DISPLAY": ":1"
+          }
+        }
+      }
+    }
+
+    # Create MCPClient from configuration dictionary
+    client = MCPClient.from_dict(config)
+
+    # Create LLM
+    llm = ChatOpenAI(model="gpt-4o")
+
+    # Create agent with the client
+    agent = MCPAgent(llm=llm, client=client, max_steps=30)
+
+    # Run the query
+    result = await agent.run(
+        "Find the best restaurant in San Francisco USING GOOGLE SEARCH",
+    )
+    print(f"\nResult: {result}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## Configuration Options
+
+You can also add the servers configuration from a config file:
+
+```python
+client = MCPClient.from_config_file(
+    os.path.join("browser_mcp.json")
+)
+```
+
+Example configuration file (`browser_mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"],
+      "env": {
+        "DISPLAY": ":1"
+      }
+    }
+  }
+}
+```
+
+## Restricting Tool Access
+
+You can control which tools are available to the agent:
+
+```python
+import asyncio
+import os
+from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
+from mcp_use import MCPAgent, MCPClient
+
+async def main():
+    # Load environment variables
+    load_dotenv()
+
+    # Create configuration dictionary
+    config = {
+      "mcpServers": {
+        "playwright": {
+          "command": "npx",
+          "args": ["@playwright/mcp@latest"],
+          "env": {
+            "DISPLAY": ":1"
+          }
+        }
+      }
+    }
+
+    # Create MCPClient from configuration dictionary
+    client = MCPClient.from_dict(config)
+
+    # Create LLM
+    llm = ChatOpenAI(model="gpt-4o")
+
+    # Create agent with restricted tools
+    agent = MCPAgent(
+        llm=llm,
+        client=client,
+        max_steps=30,
+        disallowed_tools=["file_system", "network"]  # Restrict potentially dangerous tools
+    )
+
+    # Run the query
+    result = await agent.run(
+        "Find the best restaurant in San Francisco USING GOOGLE SEARCH",
+    )
+    print(f"\nResult: {result}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## Available MCP Servers
+
+mcp_use supports any MCP server, allowing you to connect to a wide range of server implementations. For a comprehensive list of available servers, check out the [awesome-mcp-servers](https://github.com/punkpeye/awesome-mcp-servers) repository.
+
+
+Each server requires its own configuration. Check the [Configuration Guide](/essentials/configuration) for details.
+
+## HTTP Connection
+
+mcp_use now supports HTTP connections, allowing you to connect to MCP servers running on specific HTTP ports. This feature is particularly useful for integrating with web-based MCP servers.
+
+Here's a simple example to get you started with HTTP connections:
+
+```python
+import asyncio
+import os
+from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
+from mcp_use import MCPAgent, MCPClient
+
+async def main():
+    # Load environment variables
+    load_dotenv()
+
+    # Create configuration dictionary
+    config = {
+      "mcpServers": {
+        "http": {
+          "url": "http://localhost:8931/sse"
+        }
+      }
+    }
+
+    # Create MCPClient from configuration dictionary
+    client = MCPClient.from_dict(config)
+
+    # Create LLM
+    llm = ChatOpenAI(model="gpt-4o")
+
+    # Create agent with the client
+    agent = MCPAgent(llm=llm, client=client, max_steps=30)
+
+    # Run the query
+    result = await agent.run(
+        "Find the best restaurant in San Francisco USING GOOGLE SEARCH",
+    )
+    print(f"\nResult: {result}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+This example demonstrates how to connect to an MCP server running on a specific HTTP port. Make sure to start your MCP server before running this example.
+
+## Next Steps
+
+- Learn about [Configuration Options](/essentials/configuration)
+- Explore [Example Use Cases](/examples)
+- Check out [Advanced Features](/essentials/advanced)
