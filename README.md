@@ -28,7 +28,7 @@ A Streamlit-based chatbot application that helps users find their perfect accomm
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone git@github.com:akktrsst/MCP_Agent_Airbnb.git
 ```
 
 2. Install Python dependencies:
