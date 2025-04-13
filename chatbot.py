@@ -1,170 +1,79 @@
 """
-Streamlit chatbot application for Airbnb search with custom styling.
+Simple Gradio chatbot example using MCP tools.
+
+This example demonstrates how to create a basic chatbot with a Gradio interface
+that can handle conversations and perform various tasks using MCP tools.
 """
 
 import os
-import asyncio
-import streamlit as st
+import warnings
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage, AIMessage
+import gradio as gr
+
 from mcp_use import MCPAgent, MCPClient
 
-# Load environment variables
-load_dotenv()
 
-# Set page configuration
-st.set_page_config(
-    page_title="Airbnb Search Assistant",
-    page_icon="🏠",
-    layout="wide"
-)
+class SimpleChatbot:
+    """A simple chatbot that can handle conversations and perform tasks."""
+    
+    def __init__(self):
+        """Initialize the chatbot with necessary components."""
+        # Load environment variables
+        load_dotenv()
+        
+        # Create MCPClient with configuration
+        self.client = MCPClient.from_config_file(os.path.join(os.path.dirname(__file__), "airbnb_mcp.json"))
+        # Create LLM - using GPT-4o-mini
+        self.llm = ChatOpenAI(model="gpt-4o-mini")
+        # Create agent with the client
+        self.agent = MCPAgent(llm=self.llm, client=self.client, max_steps=30)
+        
+    async def process_message(self, message: str) -> str:
+        """Process a user message and return a response."""
+        try:
+            result = await self.agent.run(message, max_steps=30)
+            return str(result)
+        except Exception as e:
+            return f"Sorry, I encountered an error: {str(e)}"
+    
+    async def close(self):
+        """Clean up resources."""
+        if self.client.sessions:
+            await self.client.close_all_sessions()
 
-# Custom CSS
-st.markdown("""
-    <style>
-    .main {
-        background-color: #ffffff;
-    }
-    .stTitle {
-        color: #FF385C !important;
-        font-family: 'Circular', -apple-system, BlinkMacSystemFont, Roboto, Helvetica Neue, sans-serif;
-    }
-    .stButton>button {
-        background-color: #FF385C;
-        color: white;
-        border-radius: 8px;
-        border: none;
-        padding: 8px 16px;
-    }
-    .stButton>button:hover {
-        background-color: #E61E4D;
-    }
-    .chat-message {
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        margin-bottom: 1rem;
-        display: flex;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .user-message {
-        background-color: #F7F7F7;
-    }
-    .assistant-message {
-        background-color: #FFF8F6;
-    }
-    .feature-card {
-        background-color: white;
-        padding: 1.5rem;
-        border-radius: 1rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        margin-bottom: 1rem;
-    }
-    </style>
-    """, unsafe_allow_html=True)
 
-# Initialize session state
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-if "use_mcp" not in st.session_state:
-    st.session_state.use_mcp = True
+def create_chatbot_interface():
+    """Create and launch the Gradio interface for the chatbot."""
+    chatbot = SimpleChatbot()
+    
+    def respond(message, history):
+        """Process the message and return the response."""
+        import asyncio
+        response = asyncio.run(chatbot.process_message(message))
+        return response
+    
+    # Create the Gradio interface
+    interface = gr.ChatInterface(
+        fn=respond,
+        title="Simple Chatbot",
+        description="A simple chatbot that can handle conversations and perform tasks using MCP tools.",
+        examples=["Hello!", "What can you do?", "Tell me about yourself"],
+        theme=gr.themes.Soft()
+    )
+    
+    return interface
 
-# Initialize chat models
-@st.cache_resource
-def init_models():
-    try:
-        # Try to initialize MCP agent
-        client = MCPClient.from_config_file(os.path.join(os.path.dirname(__file__), "airbnb_mcp.json"))
-        llm = ChatOpenAI(model="gpt-4o-mini")
-        agent = MCPAgent(llm=llm, client=client, max_steps=30)
-        return {"agent": agent, "chat": llm}
-    except Exception as e:
-        st.warning("⚠️ MCP connection failed. Falling back to basic chat mode.")
-        return {"chat": ChatOpenAI(model="gpt-4o-mini")}
 
-# Create the Streamlit interface
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    st.title("🏠 Airbnb Search Assistant")
-    st.write("Let me help you find the perfect place to stay!")
+def main():
+    """Main entry point."""
+    # Suppress resource warnings
+    warnings.filterwarnings("ignore", category=ResourceWarning)
+    
+    # Create and launch the interface
+    interface = create_chatbot_interface()
+    interface.launch()
 
-    # Feature cards
-    st.markdown("""
-    <div class="feature-card">
-        <h3>🌟 Popular Features</h3>
-        <ul>
-            <li>Search properties worldwide</li>
-            <li>Filter by amenities and preferences</li>
-            <li>Get personalized recommendations</li>
-            <li>Compare prices and reviews</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
 
-    # Example queries section
-    with st.expander("📝 Example Queries"):
-        st.markdown("""
-        Try asking questions like:
-        - Find me a beachfront villa in Bali for 4 people
-        - Show luxury apartments in Paris with Eiffel Tower views
-        - Search for pet-friendly houses in London with a garden
-        - Find me a place in Tokyo near public transport
-        """)
-
-# Display chat history with custom styling
-for message in st.session_state.messages:
-    message_class = "user-message" if message["role"] == "user" else "assistant-message"
-    with st.container():
-        st.markdown(f"""
-            <div class="chat-message {message_class}">
-                <div>{message["content"]}</div>
-            </div>
-        """, unsafe_allow_html=True)
-
-# Chat input
-if prompt := st.chat_input("What kind of place are you looking for?"):
-    # Add user message to chat history
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    # Initialize models
-    models = init_models()
-
-    # Get response
-    with st.chat_message("assistant"):
-        with st.spinner("🔍 Searching for perfect matches..."):
-            try:
-                if "agent" in models and st.session_state.use_mcp:
-                    # Try using MCP agent
-                    response = asyncio.run(models["agent"].run(prompt))
-                else:
-                    # Fallback to basic chat
-                    messages = [
-                        HumanMessage(content="You are an Airbnb search assistant. Help users find accommodations and provide detailed responses about properties, including amenities, location benefits, and pricing when possible. Current query: " + prompt)
-                    ]
-                    response = models["chat"].invoke(messages).content
-
-                st.markdown(response)
-                st.session_state.messages.append({"role": "assistant", "content": response})
-            except Exception as e:
-                st.error(f"An error occurred: {str(e)}")
-                if st.session_state.use_mcp:
-                    st.session_state.use_mcp = False
-                    st.warning("Switching to basic chat mode for better stability.")
-                    st.rerun()
-
-# Footer with clear chat button and additional info
-col1, col2, col3 = st.columns([2, 1, 2])
-with col2:
-    if st.button("🗑️ Clear Chat"):
-        st.session_state.messages = []
-        st.rerun()
-
-# Add footer with Airbnb-style information
-st.markdown("""
-    <div style='text-align: center; color: #717171; padding: 20px;'>
-        <p>This is an AI-powered search assistant. Results and availability may vary.</p>
-        <p style='font-size: 12px;'>Powered by MCP and OpenAI</p>
-    </div>
-""", unsafe_allow_html=True) 
+if __name__ == "__main__":
+    main() 
