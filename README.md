@@ -20,7 +20,7 @@ A Streamlit-based chatbot application that helps users find their perfect accomm
 
 ### Prerequisites
 
-- Python 3.8 or higher
+- Python 3.10 or higher
 - Node.js (for MCP server)
 - OpenAI API key
 
